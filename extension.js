@@ -58,18 +58,14 @@ class Extension {
     }
 
     enable() {
-        log(`enabling ${Me.metadata.name}`);
         this._dbus = Gio.DBusExportedObject.wrapJSObject(DBUS_SCHEMA, this);
         this._dbus.export(Gio.DBus.session, '/org/gnome/Shell/Extensions/FocusedWindow');
-        log(`enabled ${Me.metadata.name}`);
     }
 
     disable() {
-        log(`disabling ${Me.metadata.name}`);
         this._dbus.flush();
         this._dbus.unexport();
         delete this._dbus;
-        log(`disabled ${Me.metadata.name}`);
     }
 }
 

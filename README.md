@@ -4,6 +4,12 @@ This GNOME Shell extension allows you to get the currently focused window using
 a D-Bus call. This allows you to get the focused window on Wayland, where there
 is no other way to this.
 
+# Installation
+
+You can install this extension from Gnome Extensions
+
+https://extensions.gnome.org/extension/5592/focused-window-d-bus
+
 # Usage
 
 ```sh

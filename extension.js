@@ -6,7 +6,7 @@ const Gio = imports.gi.Gio;
 
 const DBUS_SCHEMA = `
 <node>
-    <interface name="org.gnome.Shell.Extensions.FocusedWindow">
+    <interface name="org.gnome.shell.extensions.FocusedWindow">
         <method name="Get">
             <arg type="s" direction="out" name="window" />
         </method>
@@ -59,7 +59,7 @@ class Extension {
 
     enable() {
         this._dbus = Gio.DBusExportedObject.wrapJSObject(DBUS_SCHEMA, this);
-        this._dbus.export(Gio.DBus.session, '/org/gnome/Shell/Extensions/FocusedWindow');
+        this._dbus.export(Gio.DBus.session, '/org/gnome/shell/extensions/FocusedWindow');
     }
 
     disable() {

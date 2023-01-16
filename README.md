@@ -7,7 +7,7 @@ is no other way to this.
 # Usage
 
 ```sh
-gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell/Extensions/FocusedWindow --method org.gnome.Shell.Extensions.FocusedWindow.Get
+gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/shell/extensions/FocusedWindow --method org.gnome.shell.extensions.FocusedWindow.Get
 ```
 
 Return format is similar to the `Details` call of the

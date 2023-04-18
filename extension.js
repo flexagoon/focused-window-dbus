@@ -41,7 +41,6 @@ class Extension {
                 canmaximize: focusedWindow.meta_window.can_maximize(),
                 maximized: focusedWindow.meta_window.get_maximized(),
                 canminimize: focusedWindow.meta_window.can_minimize(),
-                canshade: focusedWindow.meta_window.can_shade(),
                 display: focusedWindow.meta_window.get_display(),
                 frame_type: focusedWindow.meta_window.get_frame_type(),
                 window_type: focusedWindow.meta_window.get_window_type(),

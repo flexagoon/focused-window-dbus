@@ -52,7 +52,7 @@ class Extension {
                 area_cust: focusedWindow.meta_window.get_work_area_for_monitor(currentmonitor)
             });
         } else {
-            throw new Error('No window in focus');
+            return '{}';
         }
     }
 

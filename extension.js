@@ -10,7 +10,7 @@ const DBUS_SCHEMA = `
     </interface>
 </node>`;
 
-export default class MyExtension extends Extension {
+export default class FocusedWindowDbus extends Extension {
   Get() {
     let window_list = global.get_window_actors();
     let focusedWindow = window_list.find((window) =>
@@ -71,10 +71,4 @@ export default class MyExtension extends Extension {
     this._dbus.unexport();
     delete this._dbus;
   }
-}
-
-function init() {
-    let extensionInstance = new MyExtension();
-    console.log(_(`initializing ${extensionInstance.metadata.name}`));
-    return extensionInstance;
 }

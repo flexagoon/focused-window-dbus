@@ -1,8 +1,5 @@
-"use strict";
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const Gio = imports.gi.Gio;
+import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
+import Gio from 'gi://Gio';
 
 const DBUS_SCHEMA = `
 <node>
@@ -13,7 +10,7 @@ const DBUS_SCHEMA = `
     </interface>
 </node>`;
 
-class Extension {
+export default class MyExtension extends Extension {
   Get() {
     let window_list = global.get_window_actors();
     let focusedWindow = window_list.find((window) =>
@@ -77,6 +74,7 @@ class Extension {
 }
 
 function init() {
-  log(`initializing ${Me.metadata.name}`);
-  return new Extension();
+    let extensionInstance = new MyExtension();
+    console.log(_(`initializing ${extensionInstance.metadata.name}`));
+    return extensionInstance;
 }

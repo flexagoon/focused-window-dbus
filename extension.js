@@ -40,7 +40,7 @@ export default class FocusedWindowDbus extends Extension {
         resizeable: focusedWindow.meta_window.allows_resize(),
         canclose: focusedWindow.meta_window.can_close(),
         canmaximize: focusedWindow.meta_window.can_maximize(),
-        maximized: focusedWindow.meta_window.get_maximized(),
+        maximized: focusedWindow.meta_window.is_maximized(),
         canminimize: focusedWindow.meta_window.can_minimize(),
         display: focusedWindow.meta_window.get_display(),
         frame_type: focusedWindow.meta_window.get_frame_type(),

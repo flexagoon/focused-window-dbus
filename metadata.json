@@ -4,5 +4,5 @@
   "uuid": "focused-window-dbus@flexagoon.com",
   "version": 8,
   "url": "https://github.com/flexagoon/focused-window-dbus",
-  "shell-version": ["45", "46", "47", "48"]
+  "shell-version": ["49"]
 }

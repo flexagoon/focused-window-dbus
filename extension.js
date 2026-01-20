@@ -10,6 +10,19 @@ const DBUS_SCHEMA = `
     </interface>
 </node>`;
 
+// Helper function to safely get work area properties.
+// These methods can trigger a fatal assertion in Mutter if the window's
+// logical monitor is null (e.g., during monitor hotplug or display
+// reconfiguration), causing GNOME Shell to crash.
+function safeGetWorkArea(metaWindow, method, ...args) {
+  try {
+    return metaWindow[method](...args);
+  } catch (e) {
+    // Return null if the logical monitor is invalid
+    return null;
+  }
+}
+
 export default class FocusedWindowDbus extends Extension {
   Get() {
     let window_list = global.get_window_actors();
@@ -48,10 +61,9 @@ export default class FocusedWindowDbus extends Extension {
         layer: focusedWindow.meta_window.get_layer(),
         monitor: focusedWindow.meta_window.get_monitor(),
         role: focusedWindow.meta_window.get_role(),
-        area: focusedWindow.meta_window.get_work_area_current_monitor(),
-        area_all: focusedWindow.meta_window.get_work_area_all_monitors(),
-        area_cust:
-          focusedWindow.meta_window.get_work_area_for_monitor(currentmonitor),
+        area: safeGetWorkArea(focusedWindow.meta_window, 'get_work_area_current_monitor'),
+        area_all: safeGetWorkArea(focusedWindow.meta_window, 'get_work_area_all_monitors'),
+        area_cust: safeGetWorkArea(focusedWindow.meta_window, 'get_work_area_for_monitor', currentmonitor),
       });
     } else {
       return "{}";

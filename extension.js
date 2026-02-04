@@ -10,17 +10,25 @@ const DBUS_SCHEMA = `
     </interface>
 </node>`;
 
-// Helper function to safely get work area properties.
-// These methods can trigger a fatal assertion in Mutter if the window's
-// logical monitor is null (e.g., during monitor hotplug or display
-// reconfiguration), causing GNOME Shell to crash.
-function safeGetWorkArea(metaWindow, method, ...args) {
-  try {
-    return metaWindow[method](...args);
-  } catch (e) {
-    // Return null if the logical monitor is invalid
-    return null;
+// Check if a window has a valid logical monitor.
+// The get_work_area_* methods will trigger a fatal assertion in Mutter
+// (meta_window_get_work_area_for_logical_monitor) if the window's logical
+// monitor is null. This can happen during monitor hotplug, display
+// reconfiguration, or when windows are in transient states.
+// We MUST check this BEFORE calling those methods because the assertion
+// calls abort() at the C level, which cannot be caught by JavaScript try/catch.
+function hasValidMonitor(metaWindow) {
+  const windowMonitor = metaWindow.get_monitor();
+  // Monitor index is -1 if the window has no monitor assigned
+  if (windowMonitor < 0) {
+    return false;
   }
+  // Also verify the monitor index is within bounds
+  const numMonitors = global.display.get_n_monitors();
+  if (windowMonitor >= numMonitors) {
+    return false;
+  }
+  return true;
 }
 
 export default class FocusedWindowDbus extends Extension {
@@ -35,6 +43,9 @@ export default class FocusedWindowDbus extends Extension {
     let workspaceManager = global.workspace_manager;
     let currentmonitor = global.display.get_current_monitor();
     if (focusedWindow) {
+      // Check if window has a valid monitor before calling work area methods
+      const validMonitor = hasValidMonitor(focusedWindow.meta_window);
+
       return JSON.stringify({
         title: focusedWindow.meta_window.get_title(),
         wm_class: focusedWindow.meta_window.get_wm_class(),
@@ -61,9 +72,10 @@ export default class FocusedWindowDbus extends Extension {
         layer: focusedWindow.meta_window.get_layer(),
         monitor: focusedWindow.meta_window.get_monitor(),
         role: focusedWindow.meta_window.get_role(),
-        area: safeGetWorkArea(focusedWindow.meta_window, 'get_work_area_current_monitor'),
-        area_all: safeGetWorkArea(focusedWindow.meta_window, 'get_work_area_all_monitors'),
-        area_cust: safeGetWorkArea(focusedWindow.meta_window, 'get_work_area_for_monitor', currentmonitor),
+        // Only call work area methods if window has a valid monitor
+        area: validMonitor ? focusedWindow.meta_window.get_work_area_current_monitor() : null,
+        area_all: validMonitor ? focusedWindow.meta_window.get_work_area_all_monitors() : null,
+        area_cust: validMonitor ? focusedWindow.meta_window.get_work_area_for_monitor(currentmonitor) : null,
       });
     } else {
       return "{}";

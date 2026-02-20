@@ -10,6 +10,26 @@ const DBUS_SCHEMA = `
     </interface>
 </node>`;
 
+// Check if a window has a valid logical monitor.
+// The get_work_area_* methods will trigger a fatal assertion in Mutter if the window's
+// logical monitor is null. This can happen during monitor hotplug, display reconfiguration,
+// or when windows are in transient states. We MUST check this BEFORE calling those methods
+// because the assertion calls abort() at the C level, which cannot be caught by JavaScript try/catch.
+// See: https://github.com/flexagoon/focused-window-dbus/pull/12
+function hasValidMonitor(metaWindow) {
+  const windowMonitor = metaWindow.get_monitor();
+  // Monitor index is -1 if the window has no monitor assigned
+  if (windowMonitor < 0) {
+    return false;
+  }
+  // Also verify the monitor index is within bounds
+  const numMonitors = global.display.get_n_monitors();
+  if (windowMonitor >= numMonitors) {
+    return false;
+  }
+  return true;
+}
+
 export default class FocusedWindowDbus extends Extension {
   Get() {
     let window_list = global.get_window_actors();
@@ -22,6 +42,8 @@ export default class FocusedWindowDbus extends Extension {
     let workspaceManager = global.workspace_manager;
     let currentmonitor = global.display.get_current_monitor();
     if (focusedWindow) {
+      const validMonitor = hasValidMonitor(focusedWindow.meta_window);
+
       return JSON.stringify({
         title: focusedWindow.meta_window.get_title(),
         wm_class: focusedWindow.meta_window.get_wm_class(),
@@ -48,10 +70,10 @@ export default class FocusedWindowDbus extends Extension {
         layer: focusedWindow.meta_window.get_layer(),
         monitor: focusedWindow.meta_window.get_monitor(),
         role: focusedWindow.meta_window.get_role(),
-        area: focusedWindow.meta_window.get_work_area_current_monitor(),
-        area_all: focusedWindow.meta_window.get_work_area_all_monitors(),
-        area_cust:
-          focusedWindow.meta_window.get_work_area_for_monitor(currentmonitor),
+        // Only call work area methods if window has a valid monitor
+        area: validMonitor ? focusedWindow.meta_window.get_work_area_current_monitor() : null,
+        area_all: validMonitor ? focusedWindow.meta_window.get_work_area_all_monitors() : null,
+        area_cust: validMonitor ? focusedWindow.meta_window.get_work_area_for_monitor(currentmonitor) : null,
       });
     } else {
       return "{}";

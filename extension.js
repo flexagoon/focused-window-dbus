@@ -11,12 +11,11 @@ const DBUS_SCHEMA = `
 </node>`;
 
 // Check if a window has a valid logical monitor.
-// The get_work_area_* methods will trigger a fatal assertion in Mutter
-// (meta_window_get_work_area_for_logical_monitor) if the window's logical
-// monitor is null. This can happen during monitor hotplug, display
-// reconfiguration, or when windows are in transient states.
-// We MUST check this BEFORE calling those methods because the assertion
-// calls abort() at the C level, which cannot be caught by JavaScript try/catch.
+// The get_work_area_* methods will trigger a fatal assertion in Mutter if the window's
+// logical monitor is null. This can happen during monitor hotplug, display reconfiguration,
+// or when windows are in transient states. We MUST check this BEFORE calling those methods
+// because the assertion calls abort() at the C level, which cannot be caught by JavaScript try/catch.
+// See: https://github.com/flexagoon/focused-window-dbus/pull/12
 function hasValidMonitor(metaWindow) {
   const windowMonitor = metaWindow.get_monitor();
   // Monitor index is -1 if the window has no monitor assigned
@@ -43,7 +42,6 @@ export default class FocusedWindowDbus extends Extension {
     let workspaceManager = global.workspace_manager;
     let currentmonitor = global.display.get_current_monitor();
     if (focusedWindow) {
-      // Check if window has a valid monitor before calling work area methods
       const validMonitor = hasValidMonitor(focusedWindow.meta_window);
 
       return JSON.stringify({

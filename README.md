@@ -12,17 +12,19 @@ https://extensions.gnome.org/extension/5592/focused-window-d-bus
 
 # Usage
 
+Getting the current focused window:
+
 ```sh
 gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/shell/extensions/FocusedWindow --method org.gnome.shell.extensions.FocusedWindow.Get
 ```
 
-Return format is similar to the `Details` call of the
-[Window Calls](https://github.com/ickyicky/window-calls) extensions, because the
-code is ~~stolen~~ taken from there, except there's no `frame_bounds` variable
-since it caused GNOME Shell to crash for some reason. There's also a `title`
-variable.
+Subscribing to window focus changes:
 
-Example:
+```sh
+gdbus monitor --session --dest org.gnome.Shell --object-path /org/gnome/shell/extensions/FocusedWindow
+```
+
+Return format example:
 
 ```json
 {
@@ -41,9 +43,8 @@ Example:
   "resizeable": true,
   "canclose": true,
   "canmaximize": true,
-  "maximized": 0,
+  "maximized": false,
   "canminimize": true,
-  "canshade": false,
   "display": {},
   "frame_type": 0,
   "window_type": 0,

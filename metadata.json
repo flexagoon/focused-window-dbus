@@ -2,7 +2,6 @@
   "name": "Focused Window D-Bus",
   "description": "Exposes a D-Bus method to get active window title and class",
   "uuid": "focused-window-dbus@flexagoon.com",
-  "version": 8,
   "url": "https://github.com/flexagoon/focused-window-dbus",
   "shell-version": ["49"]
 }

@@ -1,5 +1,7 @@
 import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Shell from 'gi://Shell';
 
 const DBUS_SCHEMA = `
 <node>
@@ -7,6 +9,9 @@ const DBUS_SCHEMA = `
         <method name="Get">
             <arg type="s" direction="out" name="window" />
         </method>
+        <signal name="FocusChanged">
+            <arg type="s" name="window" />
+        </signal>
     </interface>
 </node>`;
 
@@ -80,7 +85,15 @@ export default class FocusedWindowDbus extends Extension {
     }
   }
 
+  #windowTracker = null;
+  #focusConnection = null;
+
   enable() {
+    this.#windowTracker = Shell.WindowTracker.get_default();
+    this.#focusConnection = this.#windowTracker.connect("notify::focus-app", () => {
+      this._dbus.emit_signal("FocusChanged", new GLib.Variant("(s)", [this.Get()]));
+    })
+
     this._dbus = Gio.DBusExportedObject.wrapJSObject(DBUS_SCHEMA, this);
     this._dbus.export(
       Gio.DBus.session,
@@ -89,6 +102,10 @@ export default class FocusedWindowDbus extends Extension {
   }
 
   disable() {
+    this.#windowTracker.disconnect(this.#focusConnection);
+    this.#focusConnection = null;
+    this.#windowTracker = null;
+
     this._dbus.flush();
     this._dbus.unexport();
     delete this._dbus;

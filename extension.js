@@ -88,26 +88,44 @@ export default class FocusedWindowDbus extends Extension {
   #windowTracker = null;
   #focusConnection = null;
 
+  #dbusIdleId = null;
+
   enable() {
     this.#windowTracker = Shell.WindowTracker.get_default();
     this.#focusConnection = this.#windowTracker.connect("notify::focus-app", () => {
-      this._dbus.emit_signal("FocusChanged", new GLib.Variant("(s)", [this.Get()]));
+      if (this._dbus)
+        this._dbus.emit_signal("FocusChanged", new GLib.Variant("(s)", [this.Get()]));
     })
 
-    this._dbus = Gio.DBusExportedObject.wrapJSObject(DBUS_SCHEMA, this);
-    this._dbus.export(
-      Gio.DBus.session,
-      "/org/gnome/shell/extensions/FocusedWindow"
-    );
+    // Defer D-Bus export to idle to avoid blocking Shell init's GC sweep
+    // (init.js:21 AsyncReadyCallback overlaps with export's g_dbus_connection_register_object)
+    // on Wayland hybrid nvidia (mutter 46.2 + nvidia-drm secondary). See flexagoon#17.
+    this.#dbusIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+      this._dbus = Gio.DBusExportedObject.wrapJSObject(DBUS_SCHEMA, this);
+      this._dbus.export(
+        Gio.DBus.session,
+        "/org/gnome/shell/extensions/FocusedWindow"
+      );
+      this.#dbusIdleId = null;
+      return GLib.SOURCE_REMOVE;
+    });
   }
 
   disable() {
-    this.#windowTracker.disconnect(this.#focusConnection);
+    if (this.#dbusIdleId) {
+      GLib.source_remove(this.#dbusIdleId);
+      this.#dbusIdleId = null;
+    }
+    if (this.#focusConnection && this.#windowTracker) {
+      this.#windowTracker.disconnect(this.#focusConnection);
+    }
     this.#focusConnection = null;
     this.#windowTracker = null;
 
-    this._dbus.flush();
-    this._dbus.unexport();
-    delete this._dbus;
+    if (this._dbus) {
+      this._dbus.flush();
+      this._dbus.unexport();
+      delete this._dbus;
+    }
   }
 }
